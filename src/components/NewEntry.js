@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import Layout from './Layout';
 
 const NewEntryContainer = styled.div`
   display: flex;
@@ -12,8 +14,6 @@ const NewEntryForm = styled.form`
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 1px solid #ccc;
-  border-radius: 8px;
   padding: 20px;
   max-width: 400px;
   width: 100%;
@@ -27,27 +27,36 @@ const Label = styled.label`
   font-weight: bold;
 `;
 
-const Input = styled.input`
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 10px; /* Adjust the gap as needed */
 `;
 
-const SubmitButton = styled.button`
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 10px 20px;
-  cursor: pointer;
-  width: 100%;
-  font-size: 16px;
+const Input = ({ value, setValue, placeholder }) => {
+  return (
+    <input
+      className="my-custom-input-style"
+      type="text"
+      name="text"
+      id="text"
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      aria-label={placeholder}
+    />
+  );
+};
 
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
+const SubmitButton = ({ children, onClick }) => {
+  return (
+    <button
+      onClick={onClick}
+      className="my-custom-button-style"
+    >
+      {children}
+    </button>
+  );
+};
 
 const NewEntry = () => {
   const [name, setName] = useState('');
@@ -58,14 +67,14 @@ const NewEntry = () => {
   const [telephone, setTelephone] = useState('');
   const [email, setEmail] = useState('');
 
+  const navigate = useNavigate();
+
   const handleZipcodeChange = (e) => {
-    // Csak számokat engedünk át és az irányítószámot maximum 4 karakter hosszúnak korlátozzuk
     const sanitizedValue = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
     setZipcode(sanitizedValue);
   };
 
   const handleTelephoneChange = (e) => {
-    // Csak számokat engedünk át és a telefonszámot maximum 11 karakter hosszúnak korlátozzuk
     const sanitizedValue = e.target.value.replace(/[^0-9]/g, '').slice(0, 11);
     setTelephone(sanitizedValue);
   };
@@ -75,7 +84,6 @@ const NewEntry = () => {
   };
 
   const isEmailValid = () => {
-    // Egyszerű email validáció regex segítségével
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
@@ -83,59 +91,87 @@ const NewEntry = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validációk ellenőrzése
     if (!isEmailValid()) {
-      alert('Érvénytelen e-mail cím');
+      alert('Invalid email address');
       return;
     }
 
-    const formData = {
-      name,
-      street,
-      zipcode,
-      floor,
-      door,
-      telephone,
-      email
-    };
+    // Save data to the database or perform other actions
 
-    // Itt meghívd az adatokat adatbázisba mentő függvényt vagy szolgáltatást
-    console.log(formData);
-    // Példa: fetch('szerver-url', { method: 'POST', body: JSON.stringify(formData) });
+    // Navigate to another page
+    navigate('/other-page');
   };
 
   return (
-    <NewEntryContainer>
-      <h2>Új Bejegyzés Hozzáadása</h2>
-      <NewEntryForm onSubmit={handleSubmit}>
-        <FormGroup>
-          <Label>Név:</Label>
-          <Input type="text" value={name} onChange={(e) => setName(e.target.value)} />
-        </FormGroup>
-        <FormGroup>
-          <Label>Cím:</Label>
-          <Input type="text" value={street} onChange={(e) => setStreet(e.target.value)} />
-          <Input
-            type="text"
-            value={zipcode}
-            onChange={handleZipcodeChange}
-            maxLength={4}
-            placeholder="Irányítószám"
-          />
-          <Input type="text" value={floor} onChange={(e) => setFloor(e.target.value)} placeholder="Emelet" />
-          <Input type="text" value={door} onChange={(e) => setDoor(e.target.value)} placeholder="Ajtó" />
-        </FormGroup>
-        <FormGroup>
-          <Label>Telefonszám:</Label>
-          <Input type="text" value={telephone} onChange={handleTelephoneChange} maxLength={11} />
-        </FormGroup>
-        <FormGroup>
-          <Label>Email:</Label>
-          <Input type="email" value={email} onChange={handleEmailChange} />
-        </FormGroup>
-        <SubmitButton type="submit">Mentés</SubmitButton>
-      </NewEntryForm>
-    </NewEntryContainer>
+    <Layout isAuthenticated={true}>
+      <NewEntryContainer>
+        <h2>Add New Entry</h2>
+        <NewEntryForm onSubmit={handleSubmit}>
+          <FormGroup>
+            <Label>Name:</Label>
+            <Input
+              value={name}
+              setValue={setName}
+              placeholder="Enter your name"
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label>Street:</Label>
+            <Input
+              type="text"
+              value={street}
+              setValue={setStreet}
+              onChange={(e) => setStreet(e.target.value)}
+            />
+            <Input
+              type="text"
+              value={zipcode}
+              setValue={setZipcode}
+              onChange={(e) => setZipcode(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+              maxLength={4}
+              placeholder="Postal code"
+            />
+            <Input
+              type="text"
+              value={floor}
+              setValue={setFloor}
+              onChange={(e) => setFloor(e.target.value)}
+              placeholder="Floor"
+            />
+            <Input
+              type="text"
+              value={door}
+              setValue={setDoor}
+              onChange={(e) => setDoor(e.target.value)}
+              placeholder="Door"
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label>Telephone:</Label>
+            <Input
+              type="text"
+              value={telephone}
+              setValue={setTelephone}
+              onChange={(e) => setTelephone(e.target.value.replace(/[^0-9]/g, '').slice(0, 11))}
+              maxLength={11}
+            />
+          </FormGroup>
+          <FormGroup>
+            <Label>Email:</Label>
+            <Input
+              type="email"
+              value={email}
+              setValue={setEmail}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </FormGroup>
+          <ButtonGroup>
+            <SubmitButton type="submit">Save</SubmitButton>
+            <SubmitButton type="button" onClick={() => navigate('/Dashboard')}>Back</SubmitButton>
+          </ButtonGroup>
+        </NewEntryForm>
+      </NewEntryContainer>
+    </Layout>
   );
 };
 

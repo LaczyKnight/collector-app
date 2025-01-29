@@ -4,7 +4,7 @@
   align-items: center;
   height: 100vh;
   position: right;
-  background-image: url("/hattermegint.png");
+  /*background-image: url("/hattermegint.png");*/
   background-size: contain;
   background-position: center;
 }

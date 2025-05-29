@@ -1,50 +1,105 @@
+// Layout.js
 import React from 'react';
-import styled from 'styled-components';
-import { Link } from 'react-router-dom';
-import Logo from './Logo'; // Adjust the path based on your project structure
+import { Outlet, Link, Navigate } from 'react-router-dom'; // Make sure Navigate is imported
+import styled, { css } from 'styled-components'; 
+import Logo from './Logo'; 
+import UserMenu from './UserMenu'; 
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  min-height: 100vh; 
 `;
 
-const ContentContainer = styled.div`
+const Header = styled.header` 
   display: flex;
-  flex-direction: column;
-  align-items: ${({ isLoginPage }) => (isLoginPage ? 'center' : 'flex-start')};
-  max-width: 800px; /* Adjust as needed */
+  justify-content: space-between;
+  align-items: center;
   width: 100%;
-  margin: 0 auto; /* Center content horizontally */
+  padding: 10px 20px; 
+  background-color: #f8f9fa; 
+  border-bottom: 1px solid #dee2e6; 
+  box-sizing: border-box; 
+  flex-shrink: 0; 
+`;
+
+const ContentContainer = styled.main` 
+  width: 100%; 
+  flex-grow: 1; // Allows this to take up remaining space if its content does (e.g. Dashboard.js)
+
+  ${({ $isLoginPage }) =>
+    $isLoginPage
+      ? css`
+          display: flex;
+          flex-direction: column;
+          align-items: center; 
+          justify-content: flex-start; 
+          padding: 40px 20px; 
+          max-width: 450px; 
+          margin: 40px auto 0 auto; 
+          box-sizing: border-box;
+        `
+      : css`
+          // For authenticated views, the direct child (e.g., Dashboard.js) 
+          // will handle its own layout, including flex display for sidebar.
+          // This container needs to allow its child to grow.
+          display: flex; // Important for the child (DashboardContainer) to grow
+        `}
 `;
 
 const LogoLink = styled(Link)`
   text-decoration: none;
   color: inherit;
-  margin-bottom: ${({ isLoginPage }) => (isLoginPage ? '20px' : '0')};
-  align-self: ${({ isLoginPage }) => (isLoginPage ? 'center' : 'flex-start')};
+  display: flex; 
+  align-items: center;
 `;
 
-const Layout = ({ children, isAuthenticated, isLoginPage }) => {
-  return (
-    <Container>
-      {isLoginPage ? (
-        <ContentContainer isLoginPage={isLoginPage}>
-          <LogoLink to="/" isLoginPage={isLoginPage}>
+const Layout = ({ isAuthenticated, isLoginPage }) => {
+  // --- REDIRECTION LOGIC (Essential) ---
+  if (!isLoginPage && !isAuthenticated) {
+    console.log("[Layout] Not authenticated for a protected page. Redirecting to /");
+    return <Navigate to="/" replace />;
+  }
+  if (isLoginPage && isAuthenticated) {
+    console.log("[Layout] Authenticated on login page. Redirecting to /dashboard");
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // --- LOGIN PAGE LAYOUT ---
+  if (isLoginPage) {
+    return (
+      <Container>
+        <ContentContainer $isLoginPage={true}>
+          <LogoLink to="/">
             <Logo />
           </LogoLink>
-          {children}
+          <Outlet /> 
         </ContentContainer>
-      ) : isAuthenticated ? (
-        <ContentContainer>
-          <LogoLink to="/dashboard" isLoginPage={false}>
+      </Container>
+    );
+  }
+
+  // --- AUTHENTICATED LAYOUT (Header + Content Area for Dashboard/NewEntry/DataViewer) ---
+  if (isAuthenticated) {
+    return (
+      <Container>
+        <Header>
+          <LogoLink to="/dashboard"> 
             <Logo />
           </LogoLink>
-          <ContentContainer isLoginPage={false}>{children}</ContentContainer>
+          <UserMenu /> 
+        </Header>
+        <ContentContainer $isLoginPage={false}>
+          {/* The Outlet here renders Dashboard.js, NewEntry.js, or DataViewer.js */}
+          {/* These components are now responsible for including their own Sidebar */}
+          <Outlet /> 
         </ContentContainer>
-      ) : null}
-    </Container>
-  );
+      </Container>
+    );
+  }
+
+  console.log('🔴 Layout: Fallback - rendering null. This should be caught by redirection.');
+  return null;
 };
 
 export default Layout;

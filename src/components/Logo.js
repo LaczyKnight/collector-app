@@ -7,6 +7,7 @@ const LogoContainer = styled.div`
 `;
 
 const Logo = () => {
+  console.log("🖼️ Rendering Logo component");
   return (
     <LogoContainer>
       <img src={logoImage} alt="Logo" />

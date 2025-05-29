@@ -6,7 +6,8 @@ import { Outlet } from 'react-router-dom';
 
 const DashboardContainer = styled.div`
   display: flex;
-  height: 100vh;
+  flex-grow: 1;
+  width: 100%; 
 `;
 
 const MainContent = styled.div`
@@ -19,7 +20,7 @@ const Dashboard = () => {
     <DashboardContainer>
       <Sidebar />
       <MainContent>
-        <Outlet /> {/* Ez helyezi el a gyermek útvonalak tartalmát */}
+        <Outlet />
       </MainContent>
     </DashboardContainer>
   );

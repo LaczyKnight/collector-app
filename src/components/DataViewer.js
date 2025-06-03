@@ -212,8 +212,9 @@ const PaginationControls = styled.div`
 
 const TABLE_COLUMNS = [
     { key: 'name', header: 'Name' },
-    { key: 'addressLine1', header: 'Address Line 1', allowWrap: true },
-    { key: 'addressLine2', header: 'Address Line 2', allowWrap: true },
+    { key: 'street', header: 'Full Street Address', allowWrap: true },
+//    { key: 'addressLine1', header: 'Address Line 1', allowWrap: true },
+//    { key: 'addressLine2', header: 'Address Line 2', allowWrap: true },
     { key: 'zipcode', header: 'Zip Code' },
     { key: 'city', header: 'City' },
     { key: 'floor', header: 'Floor' },

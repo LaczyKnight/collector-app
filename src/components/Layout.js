@@ -1,71 +1,92 @@
 // Layout.js
 import React from 'react';
-import { Outlet, Link, Navigate } from 'react-router-dom'; // Make sure Navigate is imported
-import styled, { css } from 'styled-components'; 
-import Logo from './Logo'; 
-import UserMenu from './UserMenu'; 
+import { Outlet, Link, Navigate, useLocation } from 'react-router-dom';
+import styled, { css } from 'styled-components';
+import Logo from './Logo';
+import UserMenu from './UserMenu';
 
+// --- Styled Components (Unchanged) ---
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100vh; 
+  min-height: 100vh;
 `;
 
-const Header = styled.header` 
+const Header = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 10px 20px; 
-  background-color: #f8f9fa; 
-  border-bottom: 1px solid #dee2e6; 
-  box-sizing: border-box; 
-  flex-shrink: 0; 
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  box-sizing: border-box;
+  flex-shrink: 0;
 `;
 
-const ContentContainer = styled.main` 
-  width: 100%; 
-  flex-grow: 1; // Allows this to take up remaining space if its content does (e.g. Dashboard.js)
+const ContentContainer = styled.main`
+  width: 100%;
+  flex-grow: 1;
 
   ${({ $isLoginPage }) =>
     $isLoginPage
       ? css`
           display: flex;
           flex-direction: column;
-          align-items: center; 
-          justify-content: flex-start; 
-          padding: 40px 20px; 
-          max-width: 450px; 
-          margin: 40px auto 0 auto; 
+          align-items: center;
+          justify-content: flex-start;
+          padding: 40px 20px;
+          max-width: 450px;
+          margin: 40px auto 0 auto;
           box-sizing: border-box;
         `
       : css`
-          // For authenticated views, the direct child (e.g., Dashboard.js) 
-          // will handle its own layout, including flex display for sidebar.
-          // This container needs to allow its child to grow.
-          display: flex; // Important for the child (DashboardContainer) to grow
+          display: flex;
         `}
 `;
 
 const LogoLink = styled(Link)`
   text-decoration: none;
   color: inherit;
-  display: flex; 
+  display: flex;
   align-items: center;
 `;
+// --- End Styled Components ---
 
-const Layout = ({ isAuthenticated, isLoginPage }) => {
-  // --- REDIRECTION LOGIC (Essential) ---
+
+// --- THE NEW, FIXED LAYOUT COMPONENT ---
+// It now accepts the 'user' object as a prop to make smarter decisions.
+const Layout = ({ isAuthenticated, user, isLoginPage }) => {
+  const location = useLocation(); // Get the current URL path
+
+  // --- 1. HANDLE UNAUTHENTICATED USERS ---
+  // If the user is NOT authenticated and is trying to access a protected page, redirect to login.
   if (!isLoginPage && !isAuthenticated) {
     console.log("[Layout] Not authenticated for a protected page. Redirecting to /");
     return <Navigate to="/" replace />;
   }
-  if (isLoginPage && isAuthenticated) {
-    console.log("[Layout] Authenticated on login page. Redirecting to /dashboard");
-    return <Navigate to="/dashboard" replace />;
+
+  // --- 2. HANDLE AUTHENTICATED USERS (THE CRITICAL FIX IS HERE) ---
+  if (isAuthenticated && user) {
+    // A. CHECK FOR REQUIRED PASSWORD CHANGE (HIGHEST PRIORITY)
+    if (user.mustChangePassword && location.pathname !== '/change-password') {
+      console.log("[Layout] User MUST change password. Redirecting to /change-password.");
+      // The user is authenticated but MUST change their password. Force them to the change-password page.
+      return <Navigate to="/change-password" replace />;
+    }
+
+    // B. HANDLE REDIRECT FROM LOGIN PAGE (AFTER a successful login)
+    if (isLoginPage && !user.mustChangePassword) {
+      console.log("[Layout] Authenticated on login page and no password change needed. Redirecting to /dashboard.");
+      // The user is authenticated, does NOT need to change password, and is on the login page. Send to dashboard.
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
-  // --- LOGIN PAGE LAYOUT ---
+
+  // --- 3. RENDER THE CORRECT LAYOUT BASED ON THE ROUTE ---
+
+  // Render the simple layout for the Login page
   if (isLoginPage) {
     return (
       <Container>
@@ -73,33 +94,26 @@ const Layout = ({ isAuthenticated, isLoginPage }) => {
           <LogoLink to="/">
             <Logo />
           </LogoLink>
-          <Outlet /> 
+          <Outlet />
         </ContentContainer>
       </Container>
     );
   }
 
-  // --- AUTHENTICATED LAYOUT (Header + Content Area for Dashboard/NewEntry/DataViewer) ---
-  if (isAuthenticated) {
-    return (
-      <Container>
-        <Header>
-          <LogoLink to="/dashboard"> 
-            <Logo />
-          </LogoLink>
-          <UserMenu /> 
-        </Header>
-        <ContentContainer $isLoginPage={false}>
-          {/* The Outlet here renders Dashboard.js, NewEntry.js, or DataViewer.js */}
-          {/* These components are now responsible for including their own Sidebar */}
-          <Outlet /> 
-        </ContentContainer>
-      </Container>
-    );
-  }
-
-  console.log('🔴 Layout: Fallback - rendering null. This should be caught by redirection.');
-  return null;
+  // Render the full authenticated layout (with header and menu)
+  return (
+    <Container>
+      <Header>
+        <LogoLink to="/dashboard">
+          <Logo />
+        </LogoLink>
+        <UserMenu />
+      </Header>
+      <ContentContainer $isLoginPage={false}>
+        <Outlet />
+      </ContentContainer>
+    </Container>
+  );
 };
 
 export default Layout;

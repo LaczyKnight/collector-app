@@ -2,7 +2,7 @@
   "name": "collector-app",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://192.168.0.61:5000",
+  "proxy": "http://10.148.80.18:5000",
   "dependencies": {
     "@adminjs/express": "^6.1.1",
     "@adminjs/mongoose": "^4.1.0",

@@ -15,17 +15,16 @@ import Layout from './components/Layout';
 import DataViewer from './components/DataViewer';
 import EditEntry from './components/EditEntry';
 
-// import NotFound from './components/NotFound';
-
 function App() {
-  const { isAuthenticated } = useAuth();
+  // Get BOTH isAuthenticated AND the 'user' object from the AuthContext.
+  const { isAuthenticated, user } = useAuth();
 
   return (
     <Routes>
       {/* --- Login / Public Routes --- */}
       <Route
         path="/"
-        element={<Layout isLoginPage={true} isAuthenticated={isAuthenticated} />}
+        element={<Layout isAuthenticated={isAuthenticated} user={user} isLoginPage={true} />}
       >
         <Route index element={<Login />} />
         <Route path="change-password" element={<ChangePassword />} />
@@ -34,7 +33,7 @@ function App() {
       {/* --- Authenticated Routes --- */}
       <Route
         path="/dashboard"
-        element={<Layout isAuthenticated={isAuthenticated} isLoginPage={false} />}
+        element={<Layout isAuthenticated={isAuthenticated} user={user} isLoginPage={false} />}
       >
         <Route index element={<Dashboard />} />
         <Route path="map" element={<MapView />} />
@@ -42,32 +41,29 @@ function App() {
 
       <Route
         path="/new-entry"
-        element={<Layout isAuthenticated={isAuthenticated} isLoginPage={false} />}
+        element={<Layout isAuthenticated={isAuthenticated} user={user} isLoginPage={false} />}
       >
         <Route index element={<NewEntry />} />
       </Route>
 
-     
       <Route
-        path="/data-viewer" // This path matches your Sidebar link
-        element={<Layout isAuthenticated={isAuthenticated} isLoginPage={false} />}
+        path="/data-viewer"
+        element={<Layout isAuthenticated={isAuthenticated} user={user} isLoginPage={false} />}
       >
-        {/* Renders DataViewer component at "/data-viewer" */}
         <Route index element={<DataViewer />} />
       </Route>
-    
+
       <Route
-        path="/edit-entry/:entryId" // Use :entryId to match useParams() in EditEntry.js
-        element={<Layout isAuthenticated={isAuthenticated} isLoginPage={false} />}
+        path="/edit-entry/:entryId"
+        element={<Layout isAuthenticated={isAuthenticated} user={user} isLoginPage={false} />}
       >
-        {/* Renders EditEntry component at "/edit-entry/some-id-value" */}
         <Route index element={<EditEntry />} />
-      </Route>
-    
+      </Route> {/* <-- CORRECTED: This was </a-route> */}
 
 
+      {/* --- Catch-all 404 Route --- */}
       <Route path="*" element={
-        <Layout isAuthenticated={isAuthenticated} isLoginPage={!isAuthenticated}>
+        <Layout isAuthenticated={isAuthenticated} user={user} isLoginPage={!isAuthenticated}>
              <div style={{ padding: '50px', textAlign: 'center' }}>
                  <h2>404 - Page Not Found</h2>
                  <p>The page you are looking for does not exist.</p>

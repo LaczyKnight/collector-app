@@ -1,21 +1,19 @@
-# Use official Node.js image
-FROM node:18
-
-
-# Create app directory
-RUN mkdir -p /usr/src/app
+# ---- Stage 1: Build Stage ----
+# Use a full Node image to install all dependencies
+FROM node:18-alpine AS builder
 WORKDIR /usr/src/app
-
-# Copy package.json and install dependencies
-COPY package.json package-lock.json /usr/src/app/
+COPY package*.json ./
 RUN npm install
+COPY . .
 
-
-# Copy the rest of the app
-COPY . /usr/src/app
-
-# Expose the port the app runs on
+# ---- Stage 2: Production Stage ----
+# Start fresh from a lightweight image
+FROM node:18-alpine
+WORKDIR /usr/src/app
+COPY package*.json ./
+# Install ONLY production dependencies
+RUN npm install --only=production
+# Copy the application code from the builder stage
+COPY --from=builder /usr/src/app .
 EXPOSE 5000
-
-# Command to start the backend
 CMD ["node", "server.js"]

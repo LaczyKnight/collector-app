@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Backend Service
+  backend:
+    build:
+      context: ./collector-app-backend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      MONGO_URI: ${MONGO_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      SESSION_SECRET: ${SESSION_SECRET} # Adding this just in case your app needs it
+      NODE_ENV: ${NODE_ENV}
+    networks:
+      - app-network
+    depends_on:
+      - mongo
+  # Frontend Build Service (this container just builds the files and exits)
+  frontend-builder:
+    build:
+      context: . # Current directory (the React app)
+      dockerfile: Dockerfile
+    volumes:
+      - frontend-build:/app # Mount the built files into a shared volume
+
+  # Web Server / Reverse Proxy
+  nginx:
+    image: nginx:1.23-alpine
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf # Custom Nginx config
+      - frontend-build:/usr/share/nginx/html      # Serve files from the shared volume
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+  # Core DNS        
+  coredns:
+    image: coredns/coredns:1.10.1
+    restart: always
+    command: -conf /etc/coredns/Corefile
+    volumes:
+      - ./coredns:/etc/coredns
+    ports:
+    # Expose the DNS port on the host machine
+      - "53:53/udp"
+      - "53:53/tcp"
+    networks:
+      - app-network
+
+  # Database Service
+  mongo:
+    image: mongo:5.0 # Using a more recent version of Mongo
+    restart: always
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  frontend-build: # This shared volume is the key

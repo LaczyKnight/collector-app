@@ -1,0 +1,21 @@
+# CoreDNS Configuration for internal.rebel.com
+
+# Listen on port 53 for DNS requests
+. {
+    # This is our custom rule for our internal domain
+    hosts {
+        # IP_Address   hostname
+        10.7.0.1       internal.rebel.com
+        # Fallback to a public DNS for all other requests (e.g., google.com)
+        fallthrough
+    }
+
+    # Forward any requests we don't know about to Cloudflare's public DNS
+    forward . 1.1.1.1 1.0.0.1
+
+    # Enable logging to see requests
+    log
+
+    # Enable a cache for performance
+    cache 30
+}
